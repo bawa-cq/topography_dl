@@ -11,7 +11,7 @@ from losses import charbonnier
 
 def build_AE(input, filters=[64, 128, 128, 256], kernel_down=4, kernel_up=3):
     a = input
-
+    
     #encoder network
     for i in range(3):
         a = ReflectionPadding2D(padding=(1,1))(a)
