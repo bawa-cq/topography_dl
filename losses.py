@@ -14,7 +14,7 @@ def KL_loss(z_mean, z_log_var):
 
     return loss
 
-def perceptual_loss(y_true, y_pred, lossModel, selected_pm_layer_weights):
+def perceptual_loss(y_true, y_pred, lossModel, selected_VGG_layer_weights):
     y_true = keras.layers.Concatenate()([y_true, y_true, y_true])
     y_pred = keras.layers.Concatenate()([y_pred, y_pred, y_pred])
 
@@ -23,7 +23,7 @@ def perceptual_loss(y_true, y_pred, lossModel, selected_pm_layer_weights):
 
     rc_loss = 0.0
 
-    for h1, h2, weight in zip(h1_list, h2_list, selected_pm_layer_weights):
+    for h1, h2, weight in zip(h1_list, h2_list, selected_VGG_layer_weights):
         h1 = K.batch_flatten(h1)
         h2 = K.batch_flatten(h2)
         #rc_loss = rc_loss + weight * K.mean(K.sum(K.square(h1 - h2), axis=-1))
@@ -37,7 +37,7 @@ def VAE_loss(y_true, y_pred, z_log_var, z_mean, weight):
 
     return K.mean(rc_loss + weight*KL_loss(z_mean, z_log_var))
 
-def VAE_DFC_loss(y_true, y_pred, z_log_var, z_mean, weight, lossModel, selected_pm_layer_weights):
-    PM_loss = perceptual_loss(y_true, y_pred, lossModel, selected_pm_layer_weights)
-    
+def VAE_DFC_loss(y_true, y_pred, z_log_var, z_mean, weight, lossModel, selected_VGG_layer_weights):
+    PM_loss = perceptual_loss(y_true, y_pred, lossModel, selected_VGG_layer_weights)
+
     return K.mean(PM_loss + weight*KL_loss(z_mean, z_log_var), axis=-1)

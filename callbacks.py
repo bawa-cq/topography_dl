@@ -1,6 +1,8 @@
 from keras.callbacks import Callback
 from keras import backend as K
 
+from utils import sigmoid
+
 #exponential annealing rate for KL divergence loss
 class AnnealingCallback(Callback):
     def __init__(self, weight):
@@ -9,9 +11,9 @@ class AnnealingCallback(Callback):
         new_weight = K.get_value(self.weight)
 
         if new_weight!=1:
-            if epoch+1 >= KL_start:
+            if epoch+1 >= 3:
                 print("KL_weight: " + str(new_weight))
-                new_weight = sigmoid(-10 + KL_growth*(epoch+1-KL_start))
+                new_weight = sigmoid(-10 + 1.3*(epoch+1-3))
 
         if new_weight > 1 - 1e-6:
             new_weight = 1
