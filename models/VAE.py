@@ -52,12 +52,14 @@ def build_VAE(input, filters=[64, 128, 128, 256], kernel_down=4, kernel_up=3, la
     a = Dense(shape[1] * shape[2] * shape[3], activation='relu', kernel_initializer='he_uniform')(a)
     a = Reshape((shape[1], shape[2], shape[3]))(a)
 
-    filters.reverse()
+    filters_dec = filters.copy()
+    filters_dec.reverse()
+
     for i in range(3):
 
         a = UpSampling2D((2,2))(a)
         a = ReflectionPadding2D(padding=(1,1))(a)
-        a = Conv2D(filters[i+1], kernel_size=kernel_up, #kernel_regularizer=regularizers.l2(1e-3),
+        a = Conv2D(filters_dec[i+1], kernel_size=kernel_up, #kernel_regularizer=regularizers.l2(1e-3),
                    strides=1, kernel_initializer='he_uniform', padding='valid')(a)
         a = BatchNormalization(axis=3)(a)
         a = keras.layers.LeakyReLU()(a)

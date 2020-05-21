@@ -9,7 +9,7 @@ from keras.applications.vgg19 import VGG19
 from losses import VAE_DFC_loss
 from models.VAE import build_VAE
 
-def build_VAE_DFC(input, filters=[64, 128, 128, 256], kernel_down=4, kernel_up=3, latent_dim=100, selected_VGG_layer_weights=[1.0, 0.75, 0.5, 0.5], selected_VGG_layers = ['block1_conv2', 'block2_conv2', 'block3_conv2', 'block4_conv2']):
+def build_DFC_VAE(input, filters=[64, 128, 128, 256], kernel_down=4, kernel_up=3, latent_dim=100, selected_VGG_layer_weights=[1.0, 0.75, 0.5, 0.5], selected_VGG_layers = ['block1_conv2', 'block2_conv2', 'block3_conv2', 'block4_conv2']):
 
     assert len(selected_VGG_layers) == len(selected_VGG_layer_weights)
 
