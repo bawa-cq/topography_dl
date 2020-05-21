@@ -3,9 +3,12 @@ Implementations of AE, VAE, DFC VAE, VAE-GAN for topography data, i.e. the GEBCO
 
 
 ## Requirements:
-Python v3.7
+Python v3.7 
+
 Keras vx.x (with tensorflow vx.x )
+
 netCDF4
+
 Numpy
 
 
