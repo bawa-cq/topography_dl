@@ -19,6 +19,6 @@ The GEBCO dataset. GEBCO Compilation Group (2019), GEBCO_2019 Grid (doi: 10.5285
 
 
 ## Description
-The jupyter notebook "load_model" can be used to load the pre-trained weights of any of the models and evaluate them on the GEBCO dataset (or part of it). 
+"train.py" can be used to train any of the models.
 
-Accordingly, the jupyter notebook "train_model" can be used to train any of the models and evaluate them.
+Alternatively, the jupyter notebooks "load_model" & "train_model" can be used to load pre-trained weights or train any of the models and evaluate them on the GEBCO dataset (or part of it). 
