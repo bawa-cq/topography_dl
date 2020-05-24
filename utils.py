@@ -2,6 +2,7 @@ import numpy as np
 import math
 import tensorflow as tf
 import os
+import datetime
 
 import keras
 from keras import backend as K
@@ -10,9 +11,7 @@ from keras.engine import InputSpec
 
 from sklearn.model_selection import train_test_split
 
-from models.AE import build_AE
-from models.VAE import build_VAE
-from models.VAE_DFC import build_DFC_VAE
+from callbacks import AnnealingCallback
 
 class ReflectionPadding2D(Layer):
     def __init__(self, padding=(1, 1), **kwargs):
@@ -28,8 +27,6 @@ class ReflectionPadding2D(Layer):
         w_pad,h_pad = self.padding
         return tf.pad(x, [[0,0], [h_pad,h_pad], [w_pad,w_pad], [0,0] ], 'REFLECT')
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
 
 def sampling(args):
     """Reparameterization trick by sampling fr an isotropic unit Gaussian.
@@ -105,25 +102,6 @@ def pre_process(data_in, x=96, y=96, altitude_min=-10880.587890625, altitude_max
 
     return X_train, X_val, X_test
 
-
-def build_model(type, kernel_down=4, kernel_up=3, filters=[64, 128, 128, 256], latent_dim =100, selected_VGG_layer_weights=[1.0, 0.75, 0.5, 0.5], selected_VGG_layers=['block1_conv2', 'block2_conv2', 'block3_conv2', 'block4_conv2']):
-
-    if type == 'AE':
-        model = build_AE(inputs, filters, kernel_down, kernel_up)
-        encoder = None
-        decoder = None
-        lossModel = None
-        encoded = keras.models.Model(inputs=inputs, outputs=model.get_layer('encoded').output)
-    elif type == 'VAE':
-        model, encoder, decoder = build_VAE(inputs, filters, kernel_down, kernel_up, latent_dim)
-        lossModel = None
-        encoded = keras.models.Model(inputs=inputs, outputs=model.get_layer('encoder').get_layer('encoded').output)
-    elif type == 'DFC_VAE':
-        model, encoder, decoder, lossModel = build_DFC_VAE(inputs, filters, kernel_down, kernel_up, latent_dim, selected_VGG_layer_weights, selected_VGG_layers)
-        encoded = keras.models.Model(inputs=inputs, outputs=model.get_layer('encoder').get_layer('encoded').output)
-
-    return model, encoder, decoder, lossModel, encoded
-
 def set_lr_schedule(learning_rate):
     """
     Returns a custom learning rate that decreases as epochs progress.
@@ -138,28 +116,39 @@ def set_lr_schedule(learning_rate):
     #return the function
     return lr_schedule
 
-def get_callbacks(save_weights=True, TensorBoard=False, ReduceLROnPlateau=False, LearningRateScheduler=False, lr=1e-5):
-    callbacks = []
+def get_callbacks(KL_annealing=True, save_weights=True, TensorBoard=False, ReduceLROnPlateau=False, LearningRateScheduler=False, lr=1e-5):
+    callback_list = []
+
+    #use exponential annealing rate for KL divergence loss
+    if KL_annealing:
+        weight = K.variable(0.0)
+        callback_list.append(AnnealingCallback(weight))
 
     #save best weights
     if save_weights:
-        weight = keras.backend.variable(0.0)
-        callback_list.append(AnnealingCallback(weight))
-        os.mkdir(model_weights/$(date +%Y%m%d))
+        if not(os.path.exists('model_weights')):
+            os.mkdir('model_weights')
 
-        filepath='model_weights/' + datetime.datetime.now().strftime('%Y%m%d') + '/weights.{epoch:02d}-{val_loss:.2f}.hdf5'
-        save_weights_callback = keras.callbacks.ModelCheckpoint(filepath, save_best_only=True,
+        path = 'model_weights/' + datetime.datetime.now().strftime('%Y%m%d')
+        if not(os.path.exists(path)):
+            os.mkdir(path)
+        else:
+            filepath = path + '/weights.{epoch:02d}-{val_loss:.2f}.hdf5'
+            save_weights_callback = keras.callbacks.ModelCheckpoint(filepath, save_best_only=True,
                                                                           save_weights_only=True)
-        callback_list.append(save_weights_callback)
+            callback_list.append(save_weights_callback)
 
     #TensorBoard
     if TensorBoard:
-        os.mkdir(logs)
-        os.mkdir(logs/fit)
+        if not(os.path.exists('logs')):
+            os.mkdir('logs')
 
-        log_dir='logs/fit/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-        tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, write_grads=True, write_images=True)
-        callback_list.append(tensorboard_callback)
+        if not(os.path.exists('logs/fit')):
+            os.mkdir('logs/fit')
+        else:
+            log_dir='logs/fit/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+            tensorboard_callback = keras.callbacks.TensorBoard(log_dir=log_dir, write_grads=True, write_images=True)
+            callback_list.append(tensorboard_callback)
 
     if ReduceLROnPlateau:
         callback_list.append(keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, min_lr=1e-6))

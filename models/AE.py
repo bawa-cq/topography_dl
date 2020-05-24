@@ -6,8 +6,9 @@ from keras.models import Model
 from keras import regularizers
 from keras.optimizers import Adam
 
-from utils import ReflectionPadding2D
 from losses import charbonnier
+from utils import ReflectionPadding2D
+
 
 def build_AE(input, filters=[64, 128, 128, 256], kernel_down=4, kernel_up=3):
     a = input
@@ -31,7 +32,7 @@ def build_AE(input, filters=[64, 128, 128, 256], kernel_down=4, kernel_up=3):
     #decoder network
     filters_dec = filters.copy()
     filters_dec.reverse()
-    
+
     for i in range(3):
 
         a = UpSampling2D((2,2))(a)
